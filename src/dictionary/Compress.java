@@ -19,7 +19,9 @@ private int max_dictionary_size;
 private String miss_string=new String();
 private HashMap<String,String> miss_map;
 private  HashMap<String,String> map;
-private String miss_dictionary="miss_data.txt";
+private static int bit=16;//may required to Change it if change in dictionary
+int unique_miss=0;
+private static String miss_data="miss_data.txt";
 Compress() throws IOException
 {
 	miss_map=new HashMap<String,String>();
@@ -35,32 +37,58 @@ public static void main(String[] args) throws IOException
 	public void compress() throws IOException
 	{
 		String text = new String(Files.readAllBytes(Paths.get(input)), StandardCharsets.UTF_8);
-		Pattern p = Pattern.compile("[^ \t\n\r\f\\s]+");//regex to match to match words separated by tab,space 
-		Matcher m=p.matcher(text);//file which is match against regex is pass in constructor as parameter
-		StringBuilder output=new StringBuilder();
-		int count=0;
-		while (m.find()) {
-		String key=m.group().toLowerCase();
-		String value="";
-		count=count+key.length();
-		if(find_in_dictionary(key))
-		{
-			 value=get_value_dictionary(key);
-		}
-		else
-		{
-			value=miss(key);
-		}
-		output.append(value);
-	}
-		//System.out.println(output);
-		System.out.println(output.length());
-		System.out.println(miss_map.size());
-		System.out.println(count);
+		StringBuilder output=print_word(text);
 		write_output(output);
 		write_missData();
+		Bit_coder code=new Bit_coder();
+		code.binarytocode(Compress.output);
+		code.binarytocode(Compress.miss_data);
 	}
-
+	private StringBuilder print_word(String text)
+	{
+		StringBuilder output=new StringBuilder();
+		String lines[]=text.split("\r\n");
+		int found=0;
+		int miss=0;
+		int count=0;
+		int i=0;
+		for(String s:lines)
+		{
+			count++;
+			String[] word=s.split("\\s");
+			String value="";
+			
+			for(String key:word)
+			{
+				if(key.length()>0)
+				{
+					if(find_in_dictionary(key.toLowerCase()))
+					key=key.toLowerCase();
+					if(find_in_dictionary(key))
+					{
+						found++;
+						value=get_value_dictionary(key);
+					}
+					else
+					{
+						if(key.length()>0)
+						{
+							miss++;
+							value=miss(key);
+						}
+					}
+					output.append(value);
+					i++;
+				}
+			}
+			/*0000000000000000 */
+			//System.out.println(get_value_dictionary("\r\n"));
+			output.append("0000000000000000");
+		}
+		System.out.println("found="+found+" miss="+miss+" count="+count);
+		System.out.println("unique_miss="+unique_miss);
+		return output;
+	}
 	private void write_missData()
 	{
 			StringBuilder content =new StringBuilder();
@@ -94,8 +122,8 @@ public static void main(String[] args) throws IOException
 		}
 		else
 		{
-			int bit=(Integer.toBinaryString(max_dictionary_size)).length();
-			String id=inttoBinary(max_dictionary_size+1,bit);
+			unique_miss++;
+			String id=inttoBinary(max_dictionary_size+1);
 			max_dictionary_size++;
 			miss_map.put(str,id);
 			miss_string=miss_string+str+" ";
@@ -103,7 +131,7 @@ public static void main(String[] args) throws IOException
 		return miss_map.get(str);
 	}
 	
-	static String inttoBinary(int n,int bit)
+	static String inttoBinary(int n)
     {
    	 String str=Integer.toBinaryString(n);
    	 int len=str.length();

@@ -19,11 +19,51 @@ public class Dictionary_creator {
 	public static void main(String args[]) throws FileNotFoundException, IOException
 	{
 		//Read_data_from_pdf();//Read data from input.txt file that contain data which help to enrich our dictionary
-		String str=(new Scanner(System.in)).next();//take input from console to search any word in Dictionary.txt
-		search(str);//search any string in dictionary and its freq
+		//String str=(new Scanner(System.in)).next();//take input from console to search any word in Dictionary.txt
+		//search(str);//search any string in dictionary and its freq
 		//dictionary_tointermediate();//write data from raw dictionary to intermediate dictionary ( on the basis of any threshold frequency of words) 
-		//intermediate_tofinal();// write data from intermediate dictionary to final_dictionary
+		intermediate_tofinal();// write data from intermediate dictionary to final_dictionary
+		//direct_to_intermediate();
 	}
+	
+	static void direct_to_intermediate() throws IOException
+	{
+		String text=new String(Files.readAllBytes(Paths.get("Direct to dictionary.txt")), StandardCharsets.UTF_8);
+		String text2=new String(Files.readAllBytes(Paths.get(intermediate)), StandardCharsets.UTF_8);
+		HashMap<String,Integer> map=new HashMap<String,Integer>();
+		Pattern p=Pattern.compile("[a-zA-Z]+");
+		Matcher m=p.matcher(text);
+		while(m.find())
+		{
+			String key=m.group();
+			if(map.containsKey(key))
+			{
+				int value=map.get(key);
+				map.put(key,value+1);
+			}
+			else
+			{
+				map.put(key,1);
+			}
+		}
+		
+		m=p.matcher(text2);
+		while(m.find())
+		{
+			String key=m.group();
+			if(map.containsKey(key))
+			{
+				int value=map.get(key);
+				map.put(key,value+1);
+			}
+			else
+			{
+				map.put(key,1);
+			}
+		}
+		Map_tointermediate(map);
+	}
+	
 	//method is used to add raw dictionary to intermediate dictionary
 	static void dictionary_tointermediate() throws IOException
 	{
@@ -37,7 +77,8 @@ public class Dictionary_creator {
 		HashSet<String> set=new HashSet<String>();
 		add_intermediate_toSet(set);//Load intermediate dic. data to set
 		int count=0;
-		int bit=(Integer.toBinaryString(set.size())).length();//contains maximum no. of bit need 
+		int bit=(Integer.toBinaryString(set.size())).length()+1;//contains maximum no. of bit need 
+		System.out.println(bit);
 		HashMap<String,String> map=new HashMap<String,String>();
 		for(String s:set)
 		{
@@ -83,7 +124,7 @@ public class Dictionary_creator {
 			Set<String> set=map.keySet();
 			for(String s:set)//converting Map data in string(content)
 			{
-				if(map.get(s)>=4)//word is add to intermediate dictionary only if it has freq greater than a limit( now it is 4)
+				//word is add to intermediate dictionary only if it has freq greater than a limit( now it is 4)
 				content.append(s+" ");
 			}
 			bw.write(content.toString());//writing whole string(content) into dictionary
@@ -235,7 +276,7 @@ public class Dictionary_creator {
 				System.out.println(s+" "+map.get(s));
 			
 		}
-		System.out.println(count);
+		System.out.println("map size="+count);
 	}
 	
 	 

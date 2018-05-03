@@ -7,17 +7,22 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Set;
 
 public class Decompression {
 private String input="compressed.txt";
 private String output="output.txt";
 private String dictionary="FinalDictionary.txt";
-private String miss_dictionary="miss_data.txt";
+private String miss_data="miss_data.txt";
 private int max_dictionary_size;
 private HashMap<String,String> map;//hold final Dictionary data
 private HashMap<String,String> miss_map;//hold miss data
+private static int bit=16;
 
 public Decompression() throws IOException {
+	Bit_coder B=new Bit_coder();
+	B.codetoBinary(input);
+	B.codetoBinary(miss_data);
 	map=new HashMap<String,String>();
 	miss_map=new HashMap<String,String>();
 	add_dictionary_toMap(map,dictionary);
@@ -36,7 +41,7 @@ public static void main(String args[]) throws IOException
 private void decompress() throws IOException
 {
 	String text = new String(Files.readAllBytes(Paths.get(input)), StandardCharsets.UTF_8);
-	String[] code=split(text,14/*bit per word, need to update on update in final dictionary*/);
+	String[] code=split(text);
 	StringBuilder output=new StringBuilder();
 	for(int i=0;code[i]!=null;i++)
 	{
@@ -49,9 +54,13 @@ private void decompress() throws IOException
 		{
 			value=get_miss_data(code[i]);
 		}
-		output.append(" "+value);
+		if(code[i].equals("0000000000000000"))//temporary
+		{
+			output.append("\r\n");
+		}
+		else
+		output.append(value+" ");
 	}
-	System.out.println(output);
 	write_output(output);
 }
 private void write_output(StringBuilder data)
@@ -83,12 +92,12 @@ private String get_dictionary(String code)
 	return map.get(code);
 }
 
-private String[] split(String content,int bit)
+private String[] split(String content)
 {
 	int len=content.length();
-	String[] ptr=new String[(len/bit)+1];
+	String[] ptr=new String[len];
 	int count=0;
-	for(int i=0;i<len;i=i+bit,count++)
+	for(int i=0;i+bit<len;i=i+bit,count++)
 	{
 		ptr[count]=content.substring(i,i+bit);
 	}
@@ -130,14 +139,26 @@ private void add_missdictionary_toMap(HashMap<String,String> map) throws IOExcep
 	}
 }
 
+static void print(HashMap<String,String> map)
+{
+	Set<String> set=map.keySet();
+	int count=0;
+	for(String s:set)
+	{
+		count++;
+		System.out.println(s+" "+map.get(s));
+		
+	}
+	System.out.println("map size="+count);
+}
+
 private String generate_id()
 {
-	int bit=(Integer.toBinaryString(max_dictionary_size)).length();
-	String id=inttoBinary(max_dictionary_size+1,bit);
+	String id=inttoBinary(max_dictionary_size+1);
 	max_dictionary_size++;
 	return id;
 }
-private static String inttoBinary(int n,int bit)
+private static String inttoBinary(int n)
 {
 	 String str=Integer.toBinaryString(n);
 	 int len=str.length();
